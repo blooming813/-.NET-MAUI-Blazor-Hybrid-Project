@@ -1,0 +1,7 @@
+﻿Add-Migration -Context MedicalOfficeContext -o Data\MOMigrations Initial
+Update-Database -Context MedicalOfficeContext 
+
+Put at end of Up() 
+
+Add To Migration:
+ExtraMigration.Steps(migrationBuilder);
