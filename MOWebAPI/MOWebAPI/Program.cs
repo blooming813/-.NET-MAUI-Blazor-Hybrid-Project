@@ -8,6 +8,12 @@ builder.Services.AddDbContext<MedicalOfficeContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("MedicalOfficeContext")));
 
 builder.Services.AddControllers();
+
+//builder.Services.AddControllers()
+//    .AddJsonOptions(o =>
+//    {
+//        o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+//    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -26,5 +32,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
 MOInitializer.Seed(app);
+
 app.Run();

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace MOWebAPI.Models
 {
@@ -6,6 +7,7 @@ namespace MOWebAPI.Models
     {
         public int ID { get; set; }
 
+        [JsonIgnore]
         [Display(Name = "Patient ")]
         public string Summary
         {

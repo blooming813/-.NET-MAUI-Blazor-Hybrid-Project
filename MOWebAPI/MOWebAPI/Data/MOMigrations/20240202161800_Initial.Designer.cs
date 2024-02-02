@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MOWebAPI.Data.MOMigrations
 {
     [DbContext(typeof(MedicalOfficeContext))]
-    [Migration("20240202061609_Initial")]
+    [Migration("20240202161800_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -37,13 +37,11 @@ namespace MOWebAPI.Data.MOMigrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MiddleName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
@@ -78,7 +76,6 @@ namespace MOWebAPI.Data.MOMigrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MiddleName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
@@ -89,7 +86,6 @@ namespace MOWebAPI.Data.MOMigrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 

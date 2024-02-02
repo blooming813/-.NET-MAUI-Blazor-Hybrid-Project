@@ -20,7 +20,8 @@ namespace MOWebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Patient>>> GetPatients()
         {
-            return await _context.Patients.Include(p => p.Doctor).ToListAsync();
+            return await _context.Patients
+                .Include(p => p.Doctor).ToListAsync();
         }
 
         // GET: api/Patient/5
@@ -37,6 +38,14 @@ namespace MOWebAPI.Controllers
             }
 
             return patient;
+        }
+
+        // GET: api/PatientsByDoctor
+        [HttpGet("ByDoctor/{id}")]
+        public async Task<ActionResult<IEnumerable<Patient>>> GetPatientsByDoctor(int id)
+        {
+            return await _context.Patients.Include(e => e.Doctor)
+                .Where(e => e.DoctorID == id).ToListAsync();
         }
 
         // PUT: api/Patient/5
@@ -75,10 +84,6 @@ namespace MOWebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Patient>> PostPatient(Patient patient)
         {
-            if (_context.Patients == null)
-            {
-                return Problem("Entity set 'MedicalOfficeContext.Patients'  is null.");
-            }
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
 
@@ -89,10 +94,6 @@ namespace MOWebAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePatient(int id)
         {
-            if (_context.Patients == null)
-            {
-                return NotFound();
-            }
             var patient = await _context.Patients.FindAsync(id);
             if (patient == null)
             {
@@ -107,7 +108,7 @@ namespace MOWebAPI.Controllers
 
         private bool PatientExists(int id)
         {
-            return (_context.Patients?.Any(e => e.ID == id)).GetValueOrDefault();
+            return _context.Patients.Any(e => e.ID == id);
         }
     }
 }
