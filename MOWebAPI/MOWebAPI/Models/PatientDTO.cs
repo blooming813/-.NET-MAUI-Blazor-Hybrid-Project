@@ -4,21 +4,9 @@ using System.ComponentModel.DataAnnotations;
 namespace MOWebAPI.Models
 {
     [ModelMetadataType(typeof(PatientMetaData))]
-    public class Patient : Auditable, IValidatableObject
+    public class PatientDTO : IValidatableObject
     {
         public int ID { get; set; }
-
-
-        public string Summary
-        {
-            get
-            {
-                return FirstName
-                    + (string.IsNullOrEmpty(MiddleName) ? " " :
-                        (" " + (char?)MiddleName[0] + ". ").ToUpper())
-                    + LastName;
-            }
-        }
 
         public string FirstName { get; set; }
 
@@ -35,7 +23,7 @@ namespace MOWebAPI.Models
         public Byte[] RowVersion { get; set; }
 
         public int DoctorID { get; set; }
-        public Doctor Doctor { get; set; }
+        public DoctorDTO Doctor { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System;
 
-namespace MOWebAPI.Models
+namespace Medical_Office_WebAPI_Client.Models
 {
-    [ModelMetadataType(typeof(PatientMetaData))]
-    public class Patient : Auditable, IValidatableObject
+    public class Patient
     {
         public int ID { get; set; }
-
 
         public string Summary
         {
@@ -17,6 +14,21 @@ namespace MOWebAPI.Models
                     + (string.IsNullOrEmpty(MiddleName) ? " " :
                         (" " + (char?)MiddleName[0] + ". ").ToUpper())
                     + LastName;
+            }
+        }
+
+        public string AgeDoctor
+        {
+            get
+            {
+                if (DOB == DateTime.MinValue)
+                {
+                    return "Age: Unknown" + " - " + Doctor.Summary;
+                }
+                DateTime today = DateTime.Today;
+                int a = today.Year - DOB.Year
+                    - (today.Month < DOB.Month || (today.Month == DOB.Month && today.Day < DOB.Day) ? 1 : 0);
+                return "Age: " + a.ToString().PadLeft(3) + " - " + Doctor.Summary;
             }
         }
 
@@ -32,17 +44,11 @@ namespace MOWebAPI.Models
 
         public byte ExpYrVisits { get; set; }
 
-        public Byte[] RowVersion { get; set; }
+        public byte[] RowVersion { get; set; }
 
         public int DoctorID { get; set; }
         public Doctor Doctor { get; set; }
 
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (DOB > DateTime.Today.AddDays(1))
-            {
-                yield return new ValidationResult("Date of Birth cannot be in the future.", new[] { "DOB" });
-            }
-        }
     }
+
 }

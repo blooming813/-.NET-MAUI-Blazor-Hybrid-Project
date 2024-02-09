@@ -5,3 +5,5 @@ Put at end of Up()
 
 Add To Migration:
 ExtraMigration.Steps(migrationBuilder);
+
+Install-Package MappingGenerator -v 1.22.3
