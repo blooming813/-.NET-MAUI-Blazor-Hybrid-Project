@@ -18,97 +18,258 @@ namespace MOWebAPI.Controllers
 
         // GET: api/Patient
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Patient>>> GetPatients()
+        public async Task<ActionResult<IEnumerable<PatientDTO>>> GetPatients()
         {
             return await _context.Patients
-                .Include(p => p.Doctor).ToListAsync();
+                .Include(p => p.Doctor)
+                .Select(p => new PatientDTO
+                {
+                    ID = p.ID,
+                    FirstName = p.FirstName,
+                    MiddleName = p.MiddleName,
+                    LastName = p.LastName,
+                    OHIP = p.OHIP,
+                    DOB = p.DOB,
+                    ExpYrVisits = p.ExpYrVisits,
+                    RowVersion = p.RowVersion,
+                    DoctorID = p.DoctorID,
+                    Doctor = new DoctorDTO
+                    {
+                        ID = p.Doctor.ID,
+                        FirstName = p.Doctor.FirstName,
+                        MiddleName = p.Doctor.MiddleName,
+                        LastName = p.Doctor.LastName
+                    }
+                })
+                .ToListAsync();
         }
 
         // GET: api/Patient/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Patient>> GetPatient(int id)
+        public async Task<ActionResult<PatientDTO>> GetPatient(int id)
         {
-            var patient = await _context.Patients
+            var patientDTO = await _context.Patients
                 .Include(p => p.Doctor)
+                .Select(p => new PatientDTO
+                {
+                    ID = p.ID,
+                    FirstName = p.FirstName,
+                    MiddleName = p.MiddleName,
+                    LastName = p.LastName,
+                    OHIP = p.OHIP,
+                    DOB = p.DOB,
+                    ExpYrVisits = p.ExpYrVisits,
+                    RowVersion = p.RowVersion,
+                    DoctorID = p.DoctorID,
+                    Doctor = new DoctorDTO
+                    {
+                        ID = p.Doctor.ID,
+                        FirstName = p.Doctor.FirstName,
+                        MiddleName = p.Doctor.MiddleName,
+                        LastName = p.Doctor.LastName
+                    }
+                })
                 .FirstOrDefaultAsync(p => p.ID == id);
 
-            if (patient == null)
+            if (patientDTO == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Error: Patient record not found" });
             }
 
-            return patient;
+            return patientDTO;
         }
 
         // GET: api/PatientsByDoctor
         [HttpGet("ByDoctor/{id}")]
-        public async Task<ActionResult<IEnumerable<Patient>>> GetPatientsByDoctor(int id)
+        public async Task<ActionResult<IEnumerable<PatientDTO>>> GetPatientsByDoctor(int id)
         {
-            return await _context.Patients.Include(e => e.Doctor)
-                .Where(e => e.DoctorID == id).ToListAsync();
+            var patientDTOs = await _context.Patients
+                .Include(e => e.Doctor)
+                .Where(e => e.DoctorID == id)
+                .Select(p => new PatientDTO
+                {
+                    ID = p.ID,
+                    FirstName = p.FirstName,
+                    MiddleName = p.MiddleName,
+                    LastName = p.LastName,
+                    OHIP = p.OHIP,
+                    DOB = p.DOB,
+                    ExpYrVisits = p.ExpYrVisits,
+                    RowVersion = p.RowVersion,
+                    DoctorID = p.DoctorID,
+                    Doctor = new DoctorDTO
+                    {
+                        ID = p.Doctor.ID,
+                        FirstName = p.Doctor.FirstName,
+                        MiddleName = p.Doctor.MiddleName,
+                        LastName = p.Doctor.LastName,
+                    }
+                })
+              .ToListAsync();
+
+            if (patientDTOs.Count() > 0)
+                return patientDTOs;
+            else
+            {
+                return NotFound(new { message = "Error: No Patient records for that Doctor" });
+            }
         }
 
         // PUT: api/Patient/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for
+        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPatient(int id, Patient patient)
+        public async Task<IActionResult> PutPatient(int id, PatientDTO patientDTO)
         {
-            if (id != patient.ID)
+            if (id != patientDTO.ID)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Error: ID does not match Patient" });
             }
 
-            _context.Entry(patient).State = EntityState.Modified;
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            //Get the record you want to update
+            var patientToUpdate = await _context.Patients.FindAsync(id);
+
+            //Check that you got it
+            if (patientToUpdate == null)
+            {
+                return NotFound(new { message = "Error: Patient record not found." });
+            }
+
+            //Wow, we have a chance to check for concurrency even before bothering
+            //the database!  Of course, it will get checked again in the database just in case
+            //it changes after we pulled the record.  
+            //Note using SequenceEqual becuase it is an array after all.
+            if (patientDTO.RowVersion != null)
+            {
+                if (!patientToUpdate.RowVersion.SequenceEqual(patientDTO.RowVersion))
+                {
+                    return Conflict(new { message = "Concurrency Error: Patient has been changed by another user.  Try editing the record again." });
+                }
+            }
+
+            //patientToUpdate = patientDTO; //- Fix with MappingGenerator
+
+            //Update the properties of the entity object from the DTO object
+            patientToUpdate.ID = patientDTO.ID;
+            patientToUpdate.FirstName = patientDTO.FirstName;
+            patientToUpdate.MiddleName = patientDTO.MiddleName;
+            patientToUpdate.LastName = patientDTO.LastName;
+            patientToUpdate.OHIP = patientDTO.OHIP;
+            patientToUpdate.DOB = patientDTO.DOB;
+            patientToUpdate.ExpYrVisits = patientDTO.ExpYrVisits;
+            patientToUpdate.RowVersion = patientDTO.RowVersion;
+            patientToUpdate.DoctorID = patientDTO.DoctorID;
+
+            //Put the original RowVersion value in the OriginalValues collection for the entity
+            _context.Entry(patientToUpdate).Property("RowVersion").OriginalValue = patientDTO.RowVersion;
 
             try
             {
                 await _context.SaveChangesAsync();
+                return NoContent();
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!PatientExists(id))
                 {
-                    return NotFound();
+                    return Conflict(new { message = "Concurrency Error: Patient has been Removed." });
                 }
                 else
                 {
-                    throw;
+                    return Conflict(new { message = "Concurrency Error: Patient has been updated by another user.  Back out and try editing the record again." });
                 }
             }
+            catch (DbUpdateException dex)
+            {
+                if (dex.GetBaseException().Message.Contains("UNIQUE"))
+                {
+                    return BadRequest(new { message = "Unable to save: Duplicate OHIP number." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "Unable to save changes to the database. Try again, and if the problem persists see your system administrator." });
+                }
+            }
+        }
 
-            return NoContent();
+        private bool PatientExists(int id)
+        {
+            throw new NotImplementedException();
         }
 
         // POST: api/Patient
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Patient>> PostPatient(Patient patient)
+        public async Task<ActionResult<PatientDTO>> PostPatient(PatientDTO patientDTO)
         {
-            _context.Patients.Add(patient);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            return CreatedAtAction("GetPatient", new { id = patient.ID }, patient);
+            //Patient patient = new Patient { };    //Right click in { } and Fix with MappingGenerator
+
+            Patient patient = new Patient
+            {
+                ID = patientDTO.ID,
+                FirstName = patientDTO.FirstName,
+                MiddleName = patientDTO.MiddleName,
+                LastName = patientDTO.LastName,
+                OHIP = patientDTO.OHIP,
+                DOB = patientDTO.DOB,
+                ExpYrVisits = patientDTO.ExpYrVisits,
+                RowVersion = patientDTO.RowVersion,
+                DoctorID = patientDTO.DoctorID
+            };
+
+            try
+            {
+                _context.Patients.Add(patient);
+                await _context.SaveChangesAsync();
+
+                //Assign Database Generated values back into the DTO
+                patientDTO.ID = patient.ID;
+                patientDTO.RowVersion = patient.RowVersion;
+
+                return CreatedAtAction(nameof(GetPatient), new { id = patient.ID }, patientDTO);
+            }
+            catch (DbUpdateException dex)
+            {
+                if (dex.GetBaseException().Message.Contains("UNIQUE"))
+                {
+                    return BadRequest(new { message = "Unable to save: Duplicate OHIP number." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "Unable to save changes to the database. Try again, and if the problem persists see your system administrator." });
+                }
+            }
         }
 
         // DELETE: api/Patient/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePatient(int id)
+        public async Task<ActionResult<Patient>> DeletePatient(int id)
         {
             var patient = await _context.Patients.FindAsync(id);
             if (patient == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Delete Error: Patient has already been removed." });
             }
-
-            _context.Patients.Remove(patient);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool PatientExists(int id)
-        {
-            return _context.Patients.Any(e => e.ID == id);
+            try
+            {
+                _context.Patients.Remove(patient);
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest(new { message = "Delete Error: Unable to delete Patient." });
+            }
         }
     }
 }

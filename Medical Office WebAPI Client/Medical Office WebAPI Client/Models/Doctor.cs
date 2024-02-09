@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Generic;
 
-namespace MOWebAPI.Models
+namespace Medical_Office_WebAPI_Client.Models
 {
-    [ModelMetadataType(typeof(DoctorMetaData))]
-
-    public class Doctor : Auditable
+    public class Doctor
     {
         public int ID { get; set; }
 
@@ -35,7 +33,7 @@ namespace MOWebAPI.Models
 
         public string LastName { get; set; }
 
-        public Byte[] RowVersion { get; set; }
+        public byte[] RowVersion { get; set; }
 
         public ICollection<Patient> Patients { get; set; }
     }
